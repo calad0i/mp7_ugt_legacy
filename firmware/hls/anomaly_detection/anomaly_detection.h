@@ -31,5 +31,6 @@ void anomaly_detection(Muon muons[NMUONS], Jet jets[NJETS], EGamma egammas[NEGAM
                        AD_NN_OUT_SQ_T &anomaly_score);
 
 AD_NN_OUT_SQ_T computeLoss(AD_NN_OUT_T score[AD_NNNOUTPUTS]);
+void scaleNNInputs(pxpypz_t unscaled[AD_NNNINPUTS], AD_NN_IN_T scaled[AD_NNNINPUTS]);
 
 #endif

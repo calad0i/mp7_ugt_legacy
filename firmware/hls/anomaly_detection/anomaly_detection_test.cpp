@@ -107,23 +107,26 @@ int main() {
       cartesians_truth[AD_NNNPARTICLES-1] = ObjToCartesian(met.et, 0., phi_in*Scales::CALO_PHI_LSB);
       obj_name[AD_NNNPARTICLES-1] = "MET";
       
-      // 'unroll' particles (px, py, pz) to flat array of NN inputs
+      pxpypz_t nn_inputs_unscaled[AD_NNNINPUTS];
       AD_NN_IN_T nn_inputs[AD_NNNINPUTS];
+      
       // TODO Vitis HLS complains if the array_partition pragma is left in. Why?
-      //#pragma HLS array_partition variable=nn_inputs complete
+      #pragma HLS array_partition variable=nn_inputs_unscaled complete
+      #pragma HLS array_partition variable=nn_inputs complete
 
       for(int i = 0; i < AD_NNNPARTICLES; i++){
         #pragma HLS unroll
-        nn_inputs[3*i + 0] = cartesians[i].px;
-        nn_inputs[3*i + 1] = cartesians[i].py;
-        nn_inputs[3*i + 2] = cartesians[i].pz;
+        nn_inputs_unscaled[3*i + 0] = cartesians[i].px;
+        nn_inputs_unscaled[3*i + 1] = cartesians[i].py;
+        nn_inputs_unscaled[3*i + 2] = cartesians[i].pz;
       }
+      
+      scaleNNInputs(nn_inputs_unscaled, nn_inputs);
 
-      AD_NN_OUT_T nnetout[AD_NNNOUTPUTS];
-      AD_NN_OUT_T anomaly_score;
-      #pragma HLS array_partition variable=score complete
-      VAE_HLS(nn_inputs, nnetout);
-      anomaly_score = computeLoss(nnetout);
+      AD_NN_OUT_T nnout[AD_NNNOUTPUTS];
+      #pragma HLS array_partition variable=nnout complete
+      VAE_HLS(nn_inputs, nnout);
+      AD_NN_OUT_SQ_T anomaly_score = computeLoss(nnout);
       
       
       std::cout << "TEST : " << test << std::endl;
